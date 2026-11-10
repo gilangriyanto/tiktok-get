@@ -96,14 +96,16 @@ export function ClaimModal({ brand, product, onClose, onOutOfStock }: Props) {
     result.success && turnstileToken !== null && !submitting && failure !== "OUT_OF_STOCK";
 
   // Buka sebagai modal (fokus terkunci + Esc native) dan kunci scroll background.
+  // Cleanup sengaja TIDAK memanggil dialog.close(): close() mengantrekan event "close"
+  // yang memicu onClose. Di StrictMode (mount → cleanup → mount) event itu tiba setelah
+  // remount dan langsung menutup modal. Dialog yang di-unmount otomatis keluar dari top layer.
   useEffect(() => {
     const dialog = dialogRef.current;
-    dialog?.showModal();
+    if (dialog && !dialog.open) dialog.showModal();
     const { overflow } = document.body.style;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = overflow;
-      dialog?.close();
     };
   }, []);
 
