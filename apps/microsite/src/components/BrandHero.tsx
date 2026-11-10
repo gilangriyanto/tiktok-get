@@ -48,6 +48,7 @@ export function BrandHero({ brand, campaign }: Props) {
             alt={brand.name}
             width={560}
             height={140}
+            loading="eager"
             className="h-auto w-full"
           />
         </h1>

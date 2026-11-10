@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { BrandPageSkeleton } from "@/components/BrandPageSkeleton";
 import { BrandPageView } from "@/components/BrandPageView";
 import { activeBrandSlugs, loadActiveBrand } from "@/lib/brand-page";
 import { getCachedCampaign } from "@/lib/queries";
@@ -20,7 +22,15 @@ export async function generateMetadata({
 }
 
 /** Halaman brand yang sama, dengan kartu produk di-scroll & di-highlight. */
-export default async function BrandProductPage({ params }: PageProps<"/[brand]/[produk]">) {
+export default function BrandProductPage({ params }: PageProps<"/[brand]/[produk]">) {
+  return (
+    <Suspense fallback={<BrandPageSkeleton />}>
+      <BrandProductContent params={params} />
+    </Suspense>
+  );
+}
+
+async function BrandProductContent({ params }: Pick<PageProps<"/[brand]/[produk]">, "params">) {
   const { brand: slug, produk } = await params;
   const [brand, campaign] = await Promise.all([loadActiveBrand(slug), getCachedCampaign()]);
   if (!brand.products.some((p) => p.slug === produk)) notFound();
