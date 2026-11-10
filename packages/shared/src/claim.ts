@@ -2,18 +2,34 @@ import { z } from "zod";
 import { RetailerSchema } from "./campaign";
 
 /**
- * Normalisasi No. HP Indonesia ke format "08…".
- * Menerima awalan 08, 628, atau +628; spasi, titik, dan tanda hubung diabaikan.
+ * Normalisasi No. HP Indonesia ke format simpan "628…" (PRD BR-03).
+ * Menerima awalan 08, 628, atau +628; spasi, titik, tanda hubung, dan kurung diabaikan.
  */
 export function normalizePhone(raw: string): string {
   const compact = raw.replace(/[\s.\-()]/g, "");
-  if (compact.startsWith("+62")) return `0${compact.slice(3)}`;
-  if (compact.startsWith("62")) return `0${compact.slice(2)}`;
+  if (compact.startsWith("+62")) return compact.slice(1);
+  if (compact.startsWith("0")) return `62${compact.slice(1)}`;
   return compact;
 }
 
-/** Setelah dinormalisasi: diawali 08, total 10–13 digit. */
-const NORMALIZED_PHONE = /^08\d{8,11}$/;
+/**
+ * Format simpan "628…" dengan 10–13 digit dalam format lokal "08…"
+ * (= 11–14 digit dalam format 628…).
+ */
+const NORMALIZED_PHONE = /^628\d{8,11}$/;
+
+/** "6281234567890" → "081234567890" (untuk tampilan). Nilai lain dikembalikan apa adanya. */
+export function formatPhoneLocal(phone: string): string {
+  const normalized = normalizePhone(phone);
+  return normalized.startsWith("62") ? `0${normalized.slice(2)}` : normalized;
+}
+
+/** "6281234563456" → "0812****3456" (4 digit awal + 4 digit akhir format lokal). */
+export function maskPhone(phone: string): string {
+  const local = formatPhoneLocal(phone);
+  if (local.length <= 8) return local.replace(/\d(?=\d{2})/g, "*");
+  return `${local.slice(0, 4)}${"*".repeat(local.length - 8)}${local.slice(-4)}`;
+}
 
 export const FullNameSchema = z
   .string()
@@ -21,7 +37,7 @@ export const FullNameSchema = z
   .min(2, "Nama minimal 2 karakter")
   .max(100, "Nama maksimal 100 karakter");
 
-/** Input bebas (08/628/+628), output sudah dinormalisasi ke "08…". */
+/** Input bebas (08/628/+628), output sudah dinormalisasi ke "628…". */
 export const PhoneSchema = z
   .string()
   .trim()
@@ -57,7 +73,7 @@ export const ClaimRequestSchema = z.object({
 });
 /** Payload yang dikirim client (phone belum dinormalisasi). */
 export type ClaimRequestInput = z.input<typeof ClaimRequestSchema>;
-/** Payload setelah parse (phone sudah "08…"). */
+/** Payload setelah parse (phone sudah "628…"). */
 export type ClaimRequest = z.output<typeof ClaimRequestSchema>;
 
 /**

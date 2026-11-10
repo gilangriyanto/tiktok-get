@@ -4,7 +4,18 @@ Sumber kebenaran: skema Zod di `packages/shared/src` (`@tiktok-get/shared`).
 Pakai skema yang sama di API (`XxxSchema.parse(body)`) supaya validasi client dan server identik.
 Setelah mengubah `src/`, jalankan `pnpm --filter @tiktok-get/shared build`.
 
-## ⚠️ Breaking change
+Daftar lengkap endpoint (publik microsite + admin CMS): [`docs/api-contract.md`](../../docs/api-contract.md).
+
+## ⚠️ Breaking change (11 Nov 2026)
+
+- `retailerMode`: nilai `"all"` diganti **`"both"`** (sesuai PRD Bab 15).
+- `normalizePhone()` / `PhoneSchema` kini menghasilkan **`628…`** (sebelumnya `08…`), sesuai BR-03.
+- Skema admin baru: `list.ts` (ListQuery, Paginated, AdminError), `auth.ts` (Role, can()),
+  `admin-content.ts` (CampaignSettings, BrandInput/AdminBrand, ProductInput/AdminProduct, FAQ),
+  `admin-voucher.ts` (AdminVoucher, VoucherEvent, upload, ClaimRecord, Dashboard),
+  `admin-ops.ts` (template SMS, blocklist).
+
+## ⚠️ Breaking change (10 Nov 2026)
 
 `ClaimRequestSchema` lama **diganti**:
 
@@ -39,7 +50,7 @@ Harga: integer rupiah (`8000`, bukan `"8.000"`).
 
 ## Skema
 
-- **Campaign**: `title`, `description`, `startAt`, `endAt`, `retailerMode` (`indomaret|alfamart|all`),
+- **Campaign**: `title`, `description`, `startAt`, `endAt`, `retailerMode` (`indomaret|alfamart|both`),
   `howtoSteps[] {title, description}`, `faqs[] {question, answer}`
 - **Brand**: `slug`, `name`, `status` (`active|coming_soon|inactive`), `cardLabel` ("Voucher 10RB"),
   `cardSubLabel` ("Kuota Terbatas"), `cardImage?`, `logo?`, `heroDesktop?`, `heroMobile?`,
@@ -55,11 +66,15 @@ Harga: integer rupiah (`8000`, bukan `"8.000"`).
 
 ### No. HP
 
-Client boleh mengirim `08…`, `628…`, atau `+628…` (spasi/titik/tanda hubung diabaikan).
-`PhoneSchema` menormalisasi ke format `08…` lalu mewajibkan total **10–13 digit**.
-`ClaimRequestSchema.parse()` di API langsung menghasilkan nomor ternormalisasi, jadi
-nomor yang sama dari format berbeda dihitung sebagai satu user untuk kuota.
-Helper: `normalizePhone(raw)`.
+Client boleh mengirim `08…`, `628…`, atau `+628…` (spasi/titik/tanda hubung/kurung diabaikan).
+`PhoneSchema` menormalisasi ke **format simpan `628…`** (PRD BR-03) dan mewajibkan **10–13 digit dalam
+format lokal 08…** (= 11–14 digit dalam format 628…). ⚠️ BR-03 menulis “10–13 digit setelah normalisasi”;
+dibaca harfiah untuk 628… itu menolak nomor lokal 13 digit yang valid — mohon dikonfirmasi.
+`ClaimRequestSchema.parse()` di API langsung menghasilkan nomor ternormalisasi, jadi nomor yang sama dari
+format berbeda dihitung sebagai satu user untuk kuota.
+
+Tampilan di UI selalu format lokal: `formatPhoneLocal("6281234563456")` → `081234563456`,
+`maskPhone(...)` → `0812****3456`. Helper: `normalizePhone`, `formatPhoneLocal`, `maskPhone`.
 
 ### Kode error klaim
 

@@ -1,13 +1,14 @@
 import { z } from "zod";
 import { SlugSchema } from "./slug";
 
-const IsoDateTime = z.iso.datetime({ offset: true });
+/** ISO 8601 dengan offset, mis. 2027-01-04T23:59:59+07:00. */
+export const IsoDateTimeSchema = z.iso.datetime({ offset: true });
 
 export const RetailerSchema = z.enum(["indomaret", "alfamart"]);
 export type Retailer = z.infer<typeof RetailerSchema>;
 
 /** Retailer tempat voucher campaign bisa ditukar. */
-export const RetailerModeSchema = z.enum(["indomaret", "alfamart", "all"]);
+export const RetailerModeSchema = z.enum(["indomaret", "alfamart", "both"]);
 export type RetailerMode = z.infer<typeof RetailerModeSchema>;
 
 export const HowtoStepSchema = z.object({
@@ -25,8 +26,8 @@ export type Faq = z.infer<typeof FaqSchema>;
 export const CampaignSchema = z.object({
   title: z.string().min(1),
   description: z.string(),
-  startAt: IsoDateTime,
-  endAt: IsoDateTime,
+  startAt: IsoDateTimeSchema,
+  endAt: IsoDateTimeSchema,
   retailerMode: RetailerModeSchema,
   howtoSteps: z.array(HowtoStepSchema),
   faqs: z.array(FaqSchema),

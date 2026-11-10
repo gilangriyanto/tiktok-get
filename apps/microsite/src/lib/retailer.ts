@@ -7,11 +7,11 @@ export const RETAILER_LABELS: Record<Retailer, string> = {
 };
 
 export function retailerModeLabel(mode: RetailerMode): string {
-  return mode === "all" ? "Indomaret & Alfamart" : RETAILER_LABELS[mode];
+  return mode === "both" ? "Indomaret & Alfamart" : RETAILER_LABELS[mode];
 }
 
 export function retailersOf(mode: RetailerMode): Retailer[] {
-  return mode === "all" ? ["indomaret", "alfamart"] : [mode];
+  return mode === "both" ? ["indomaret", "alfamart"] : [mode];
 }
 
 /** TODO(aset): logo retailer asli. */
