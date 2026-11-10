@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# microsite — #TikTokGet
 
-## Getting Started
+Next.js 16 (App Router, Cache Components) + Tailwind v4. Port 3000.
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```powershell
+pnpm --filter @tiktok-get/shared build   # sekali, atau setelah skema shared berubah
+Copy-Item apps/microsite/.env.example apps/microsite/.env.local
+pnpm --filter microsite dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Struktur
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `src/app` — route: `/`, `/[brand]`, `/[brand]/[produk]`, `/v/[token]`, `/belum-mulai`, `/berakhir`,
+  `/voucher-kedaluwarsa`, `/syarat-ketentuan`, `/kebijakan-privasi`, 404
+- `src/components` — satu komponen per file
+- `src/lib/api.ts` — satu fungsi per endpoint; mock ↔ API asli lewat env
+- `src/lib/queries.ts` — pembungkus `"use cache"` untuk Server Components
+- `src/proxy.ts` — alihkan ke `/belum-mulai` / `/berakhir` sesuai periode campaign
+- `src/mocks` — data mock
+- Design tokens (warna, radius, glow, `--font-display`, `--font-body`): `src/app/globals.css` (`@theme`)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Kontrak data: [`packages/shared/CONTRACT.md`](../../packages/shared/CONTRACT.md).
 
-## Learn More
+## Env
 
-To learn more about Next.js, take a look at the following resources:
+| Variabel | Fungsi |
+|---|---|
+| `NEXT_PUBLIC_USE_MOCK` | `true` = data mock. Mock juga dipakai jika `NEXT_PUBLIC_API_URL` kosong |
+| `NEXT_PUBLIC_API_URL` | base URL apps/api |
+| `NEXT_PUBLIC_MOCK_CAMPAIGN_STATE` | mock saja: kosong = `active`; `upcoming` / `ended` / `active` = paksa; `dates` = pakai tanggal mock |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Variabel `NEXT_PUBLIC_*` di-inline saat build/dev → restart `dev` (atau build ulang) setelah mengubahnya.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Mencoba semua state (mock)
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| State | Caranya |
+|---|---|
+| Brand coming soon | Home → 2 kartu "Coming Soon" (tidak bisa diklik) |
+| Produk sold out | `/nescafe` → kartu Ice Black 220ML |
+| Highlight produk | `/nescafe/ice-roast-220ml` |
+| Validasi form | Klaim → isi nama 1 huruf / HP `0812` / umur `9` |
+| Loading | Klaim dengan data valid (mock delay 0,8 detik) |
+| Kuota habis | No. HP berakhiran `000`, mis. `081234567000` |
+| Stok habis | No. HP berakhiran `111` (kartu ikut jadi "Habis Terjual") |
+| Rate limit / error umum | No. HP berakhiran `222` |
+| Sukses → voucher | No. HP lain, mis. `081234567890` → `/v/demo-token` |
+| Voucher kedaluwarsa | `/v/expired-token` |
+| Token tidak ada / 404 | `/v/apa-saja`, `/halaman-asal` |
+| Campaign belum mulai / berakhir | `NEXT_PUBLIC_MOCK_CAMPAIGN_STATE=upcoming` / `ended` lalu buka `/` |
+| Sumber traffic | Buka `/?src=tiktok` → `sessionStorage["tiktokget:src"] = "tiktok"`, dikirim saat klaim |
