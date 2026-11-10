@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { BRAND_STATUS_LABELS, toOptions } from "@/lib/labels";
+import { slugify } from "@/lib/slugify";
 import { createBrandAction, updateBrandAction } from "./actions";
 import { brandToInput } from "./brand-input";
 import { VideoPreview } from "./video-preview";
@@ -30,16 +31,6 @@ const PROVIDER_OPTIONS = [
   { value: "youtube", label: "YouTube" },
   { value: "tiktok", label: "TikTok" },
 ];
-
-function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
-}
 
 export function BrandForm({ id, initial, readOnly }: { id?: string; initial: BrandInput; readOnly: boolean }) {
   const router = useRouter();
