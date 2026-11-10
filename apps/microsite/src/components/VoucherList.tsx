@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Brand, Product } from "@tiktok-get/shared";
+import { ClaimModal } from "./ClaimModal";
 import { VoucherTicketCard } from "./VoucherTicketCard";
 
 type Props = {
@@ -11,9 +12,10 @@ type Props = {
   highlightSlug?: string;
 };
 
-// TODO(langkah 6): `brand` dipakai ClaimModal.
-export function VoucherList({ products, highlightSlug }: Props) {
-  const [, setSelected] = useState<Product | null>(null);
+export function VoucherList({ brand, products, highlightSlug }: Props) {
+  const [selected, setSelected] = useState<Product | null>(null);
+  /** Produk yang dilaporkan habis oleh API sejak halaman dimuat. */
+  const [soldOutSlugs, setSoldOutSlugs] = useState<ReadonlySet<string>>(new Set());
 
   useEffect(() => {
     if (!highlightSlug) return;
@@ -21,6 +23,10 @@ export function VoucherList({ products, highlightSlug }: Props) {
       .getElementById(`produk-${highlightSlug}`)
       ?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [highlightSlug]);
+
+  function markSoldOut(product: Product) {
+    setSoldOutSlugs((prev) => new Set(prev).add(product.slug));
+  }
 
   return (
     <section aria-labelledby="daftar-voucher-title" className="container-site">
@@ -34,13 +40,25 @@ export function VoucherList({ products, highlightSlug }: Props) {
         {products.map((product) => (
           <li key={product.slug}>
             <VoucherTicketCard
-              product={product}
+              product={
+                soldOutSlugs.has(product.slug) ? { ...product, stockStatus: "sold_out" } : product
+              }
               highlighted={product.slug === highlightSlug}
               onClaim={setSelected}
             />
           </li>
         ))}
       </ul>
+
+      {selected && (
+        <ClaimModal
+          key={selected.slug}
+          brand={brand}
+          product={selected}
+          onClose={() => setSelected(null)}
+          onOutOfStock={markSoldOut}
+        />
+      )}
     </section>
   );
 }
