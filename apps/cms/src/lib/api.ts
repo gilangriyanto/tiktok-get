@@ -48,6 +48,7 @@ import {
   type VoucherUploadRequest,
   type VoucherUploadResult,
 } from "@tiktok-get/shared";
+import { io } from "next/cache";
 import { z } from "zod";
 import { ApiError, apiError } from "./api-error";
 import * as mock from "./mock/server";
@@ -101,22 +102,29 @@ async function request<S extends z.ZodType>(
 
 const NoContent = z.null();
 
+/** Mock meniru panggilan jaringan: io() menandai I/O agar Date.now() dkk. tidak masuk prerender. */
+async function mockServer(): Promise<typeof mock> {
+  await io();
+  return mock;
+}
+
 /** Mock: jalankan fungsi server mock dengan user dari token (meniru middleware auth API). */
-function asUser<T>(token: string, fn: (user: AdminUser) => T): T {
-  return fn(mock.me(token));
+async function asUser<T>(token: string, fn: (user: AdminUser) => T | Promise<T>): Promise<T> {
+  const m = await mockServer();
+  return fn(m.me(token));
 }
 
 /* ───────────── auth ───────────── */
 
 /** POST /admin/auth/login */
 export async function login(req: LoginRequest): Promise<LoginResponse> {
-  if (USE_MOCK) return mock.login(req);
+  if (USE_MOCK) return (await mockServer()).login(req);
   return request(null, "POST", "/auth/login", LoginResponseSchema, req);
 }
 
 /** GET /admin/auth/me */
 export async function getMe(token: string): Promise<AdminUser> {
-  if (USE_MOCK) return mock.me(token);
+  if (USE_MOCK) return (await mockServer()).me(token);
   return request(token, "GET", "/auth/me", AdminUserSchema);
 }
 
@@ -339,7 +347,7 @@ export async function deleteBlock(token: string, id: string): Promise<void> {
 
 /** POST /admin/media (multipart/form-data, field "file") */
 export async function uploadMedia(token: string, file: File): Promise<{ url: string }> {
-  if (USE_MOCK) return mock.uploadMedia(mock.me(token), file);
+  if (USE_MOCK) return asUser(token, (u) => mock.uploadMedia(u, file));
   const form = new FormData();
   form.set("file", file);
   const res = await fetch(`${API_URL}/admin/media`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form });

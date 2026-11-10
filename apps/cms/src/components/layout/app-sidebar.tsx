@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   Sidebar,
@@ -21,13 +22,25 @@ function isActive(pathname: string, href: string): boolean {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/** Pathname = data URL pada route dinamis → dibaca di dalam Suspense; fallback tanpa penanda aktif. */
 function NavList({ items }: { items: NavItem[] }) {
-  const pathname = usePathname();
+  return (
+    <Suspense fallback={<NavItems items={items} pathname={null} />}>
+      <NavListActive items={items} />
+    </Suspense>
+  );
+}
+
+function NavListActive({ items }: { items: NavItem[] }) {
+  return <NavItems items={items} pathname={usePathname()} />;
+}
+
+function NavItems({ items, pathname }: { items: NavItem[]; pathname: string | null }) {
   return (
     <SidebarMenu>
       {items.map((item) => (
         <SidebarMenuItem key={item.href}>
-          <SidebarMenuButton asChild isActive={isActive(pathname, item.href)} tooltip={item.label}>
+          <SidebarMenuButton asChild isActive={pathname !== null && isActive(pathname, item.href)} tooltip={item.label}>
             <Link href={item.href}>
               <item.icon />
               <span>{item.label}</span>
