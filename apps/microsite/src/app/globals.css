@@ -90,6 +90,29 @@
   }
 }
 
+/* Lekukan setengah lingkaran di sisi kanan kartu tiket voucher. */
+@utility ticket-notch-right {
+  mask-image: radial-gradient(circle 1.9rem at 100% 50%, transparent 97%, #000 100%);
+}
+
+/* Tepi bergerigi atas-bawah + lekukan kecil (VoucherCodeTicket). */
+@utility ticket-serrated {
+  --tooth: 7px;
+  mask-image:
+    radial-gradient(circle var(--tooth) at 50% 0, transparent 95%, #000 100%),
+    radial-gradient(circle var(--tooth) at 50% 100%, transparent 95%, #000 100%),
+    radial-gradient(circle 4px at 0 50%, transparent 95%, #000 100%),
+    radial-gradient(circle 4px at 100% 50%, transparent 95%, #000 100%);
+  mask-composite: intersect;
+  -webkit-mask-composite: source-in;
+  mask-size:
+    100% 100%,
+    100% 100%,
+    100% 14px,
+    100% 14px;
+  mask-repeat: no-repeat, no-repeat, repeat-y, repeat-y;
+}
+
 /* Highlight kartu voucher saat dibuka via /[brand]/[produk]. */
 @keyframes highlight-pulse {
   0%,

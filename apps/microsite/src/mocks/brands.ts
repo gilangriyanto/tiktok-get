@@ -13,10 +13,11 @@ export const mockBrands: BrandDetail[] = [
     logo: `${PH}/brand-logo.svg`,
     heroDesktop: `${PH}/brand-hero-desktop.svg`,
     heroMobile: `${PH}/brand-hero-mobile.svg`,
+    // TODO(konten): ID video YouTube/TikTok asli.
     videos: [
-      { provider: "youtube", videoId: "dQw4w9WgXcQ", title: "Nescafe Ice Americano" },
-      { provider: "tiktok", videoId: "7300000000000000001", title: "Nescafe Ice Roast" },
-      { provider: "youtube", videoId: "aqz-KE-bpKQ", title: "Nescafe Ice Black" },
+      { provider: "youtube", videoId: "VIDEO_ID_1", title: "Nescafe Ice Americano" },
+      { provider: "tiktok", videoId: "VIDEO_ID_2", title: "Nescafe Ice Roast" },
+      { provider: "youtube", videoId: "VIDEO_ID_3", title: "Nescafe Ice Black" },
     ],
     products: [
       {
