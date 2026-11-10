@@ -33,3 +33,16 @@ export function formatPeriod(startAt: string, endAt: string, separator = " s/d "
 export function formatRupiah(value: number): string {
   return `Rp ${value.toLocaleString("id-ID")}`;
 }
+
+const timeWib = new Intl.DateTimeFormat("id-ID", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+  timeZone: TZ,
+});
+
+/** "4 Januari 2027, 23.59 WIB" */
+export function formatDateTimeWib(iso: string): string {
+  const date = new Date(iso);
+  return `${longDate.format(date)}, ${timeWib.format(date)} WIB`;
+}
