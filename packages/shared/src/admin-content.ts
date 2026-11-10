@@ -8,6 +8,7 @@ import {
   RetailerSchema,
   VideoSchema,
 } from "./campaign";
+import { ListQuerySchema } from "./list";
 import { SlugSchema } from "./slug";
 
 /* ───────────────────────── Campaign ───────────────────────── */
@@ -214,3 +215,40 @@ export type FaqInput = z.infer<typeof FaqInputSchema>;
 
 export const AdminFaqSchema = FaqInputSchema.extend({ id: z.string() });
 export type AdminFaq = z.infer<typeof AdminFaqSchema>;
+
+/* ───────────────────────── Query daftar & opsi ───────────────────────── */
+
+export const BrandListQuerySchema = ListQuerySchema.extend({
+  status: BrandSchema.shape.status.optional(),
+});
+export type BrandListQuery = z.output<typeof BrandListQuerySchema>;
+
+export const ProductListQuerySchema = ListQuerySchema.extend({
+  brandSlug: z.string().optional(),
+  isActive: z.enum(["true", "false"]).optional(),
+});
+export type ProductListQuery = z.output<typeof ProductListQuerySchema>;
+
+export const FaqListQuerySchema = ListQuerySchema.extend({
+  category: FaqCategorySchema.optional(),
+});
+export type FaqListQuery = z.output<typeof FaqListQuerySchema>;
+
+/** GET /admin/options — data ringkas untuk dropdown filter & form. */
+export const AdminOptionsSchema = z.object({
+  brands: z.array(z.object({ slug: z.string(), name: z.string(), status: BrandSchema.shape.status })),
+  products: z.array(
+    z.object({
+      slug: z.string(),
+      name: z.string(),
+      variant: z.string(),
+      brandSlug: z.string(),
+      retailers: z.array(RetailerSchema),
+    }),
+  ),
+});
+export type AdminOptions = z.infer<typeof AdminOptionsSchema>;
+
+/** POST /admin/media (multipart, field "file") → URL publik (R2). */
+export const MediaUploadResponseSchema = z.object({ url: z.string().min(1) });
+export type MediaUploadResponse = z.infer<typeof MediaUploadResponseSchema>;
